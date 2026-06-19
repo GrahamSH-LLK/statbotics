@@ -2,17 +2,17 @@ export const PROD = process.env.PROD === "True";
 
 // undici bug requires 127.0.0.1 instead of localhost
 export const BACKEND_URL = PROD
-  ? "https://api.statbotics.io/v3/site"
+  ? "https://statboticsapi.frc.autos/v3/site"
   : "http://127.0.0.1:8000/v3/site";
 
 export const BUCKET_URL = PROD
-  ? "https://storage.googleapis.com/site_v1"
+  ? "https://storage.googleapis.com/site_gh_v1"
   : "https://storage.googleapis.com/site_dev_v1";
 
 export const TBA_API_KEY = "XeUIxlvO4CPc44NlLE3ncevDg7bAhp6CRy6zC9M2aQb2zGfys0M30eKwavFJSEJr";
 
 export const CURR_YEAR = 2026;
-export const DISABLE_GCS = true;
+export const DISABLE_GCS = false;
 
 // 9970 to 9999 are placeholder teams
 export const PLACEHOLDER_TEAMS = Array.from({ length: 30 }, (_, i) => 9970 + i);
