@@ -1,19 +1,20 @@
 "use client";
 
-import Highcharts from "highcharts";
-import HighchartsReact from "highcharts-react-official";
-import HC_more from "highcharts/highcharts-more";
+import type { Options } from "highcharts";
 
 import { useEffect, useState } from "react";
+
+import dynamic from "next/dynamic";
 
 import { APITeamEvent, APITeamYear } from "../../types/api";
 import { ColumnBar, getColumnOptionsDict } from "../columns";
 import { filterData } from "../filter";
 import { FilterBar } from "../filterBar";
 
-if (typeof Highcharts === "object") {
-  HC_more(Highcharts);
-}
+const HighchartsBubble = dynamic(() => import("./HighchartsBubble"), {
+  ssr: false,
+  loading: () => <div className="h-[500px] w-full" />,
+});
 
 type ScatterData = {
   x: number;
@@ -140,7 +141,7 @@ const BubbleChart = ({
     labelInt: datum.x > xCutoff || datum.y > yCutoff || datum.z > zCutoff ? 1 : 0,
   }));
 
-  const options: Highcharts.Options = {
+  const options: Options = {
     title: {
       text: "",
     },
@@ -274,7 +275,7 @@ const BubbleChart = ({
         </div>
       )}
       <div className="w-full flex justify-center">
-        <HighchartsReact highcharts={Highcharts} options={options} />
+        <HighchartsBubble options={options} />
       </div>
     </div>
   );

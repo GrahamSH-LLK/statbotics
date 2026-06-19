@@ -13,7 +13,15 @@ import NotFound from "../shared/notFound";
 import SummaryTabs from "./summaryTabs";
 import Tabs from "./tabs";
 
-const PageContent = ({ team, paramYear }: { team: number; paramYear: number }) => {
+const PageContent = ({
+  team,
+  paramYear,
+  initialTeamYearData,
+}: {
+  team: number;
+  paramYear: number;
+  initialTeamYearData?: TeamYearData;
+}) => {
   const [prevYear, _setPrevYear] = useState(paramYear);
   const [year, _setYear] = useState(paramYear);
 
@@ -27,11 +35,11 @@ const PageContent = ({ team, paramYear }: { team: number; paramYear: number }) =
 
   const [teamYearDataDict, setTeamYearDataDict] = useState<{
     [key: number]: TeamYearData | undefined;
-  }>({});
+  }>(() => (initialTeamYearData ? { [paramYear]: initialTeamYearData } : {}));
 
   useEffect(() => {
-    setTeamYearDataDict({});
-  }, [team]);
+    setTeamYearDataDict(initialTeamYearData ? { [paramYear]: initialTeamYearData } : {});
+  }, [team, paramYear, initialTeamYearData]);
 
   useEffect(() => {
     const _getTeamYearDataForYear = async (team: number, year: number) => {

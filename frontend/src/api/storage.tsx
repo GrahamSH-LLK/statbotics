@@ -1,4 +1,3 @@
-import { del, get, set } from "idb-keyval";
 import pako from "pako";
 
 import { BACKEND_URL, BUCKET_URL, DISABLE_GCS } from "../constants";
@@ -6,30 +5,10 @@ import { log, round } from "../utils";
 
 export const version = "v4";
 
-async function setWithExpiry(key: string, value: any, ttl: number) {
-  const now = new Date();
-
-  try {
-    await set(`${key}_expiry`, now.getTime() + 1000 * ttl);
-    await set(key, value);
-  } catch (e: any) {
-    log("Error setting", e);
-  }
-}
-
-async function getWithExpiry(key: string) {
-  const expiry = await get(`${key}_expiry`);
-  if (!expiry) {
-    return null;
-  }
-  const now = new Date();
-  if (now.getTime() > expiry) {
-    await del(`${key}_expiry`);
-    await del(key);
-    return null;
-  }
-  return get(key);
-}
+type QueryOptions = {
+  revalidate?: number;
+  tags?: string[];
+};
 
 export function decompress(buffer: any) {
   const strData = pako.inflate(buffer, { to: "string" });
@@ -37,52 +16,58 @@ export function decompress(buffer: any) {
   return data;
 }
 
+function cacheOptions(expiry: number, options?: QueryOptions) {
+  return {
+    next: {
+      revalidate: options?.revalidate ?? expiry,
+      tags: options?.tags,
+    },
+  };
+}
+
 async function query(
-  storageKey: string,
+  _storageKey: string,
   apiPath: string,
   checkBucket: boolean,
   minLength: number,
-  expiry: number
-) {
-  const cacheData = await getWithExpiry(storageKey);
-  if (cacheData && (minLength === 0 || cacheData?.length > minLength)) {
-    log(`Used Local Storage: ${storageKey}`);
-    return cacheData;
-  }
-
+  expiry: number,
+  options?: QueryOptions
+): Promise<any> {
   const start = performance.now();
+  let data: any = null;
 
-  let buffer = null;
   try {
     if (!checkBucket || DISABLE_GCS) {
       throw new Error("Skip bucket check");
     }
+
     const fileName = apiPath.replace("?", ".").replace("&", ".");
-    const res = await fetch(`${BUCKET_URL}${fileName}?t=${Date.now() / 1000 / 60}`, {
-      next: { revalidate: 0 },
+    const res = await fetch(`${BUCKET_URL}${fileName}`, {
+      ...cacheOptions(expiry, options),
       headers: {
-        "Cache-Control": "no-cache",
         "Content-Type": "application/octet-stream",
       },
     });
     log(`${fileName} (bucket) took ${round(performance.now() - start, 0)}ms`);
-    if (res.ok) {
-      buffer = decompress(await res.arrayBuffer());
-    } else {
+
+    if (!res.ok) {
       throw new Error(`Failed to fetch from bucket: ${res.status}`);
     }
+
+    data = decompress(await res.arrayBuffer());
   } catch (e) {
-    const res = await fetch(`${BACKEND_URL}${apiPath}`, { next: { revalidate: 0 } });
+    const res = await fetch(`${BACKEND_URL}${apiPath}`, cacheOptions(expiry, options));
     log(`${apiPath} (backend) took ${round(performance.now() - start, 0)}ms`);
     if (res.ok) {
-      buffer = await res.json();
+      data = await res.json();
     }
   }
 
-  if (buffer) {
-    await setWithExpiry(storageKey, buffer, expiry);
-    return buffer;
+  if (data && (minLength === 0 || data?.length > minLength)) {
+    return data;
   }
+
+  return undefined as any;
 }
 
 export default query;

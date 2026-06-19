@@ -13,7 +13,7 @@ const Tabs = ({
   filters,
   setFilters,
 }: {
-  data: EventsData;
+  data: EventsData | undefined;
   error: boolean;
   filters: { [key: string]: any };
   setFilters: (filters: { [key: string]: any }) => void;

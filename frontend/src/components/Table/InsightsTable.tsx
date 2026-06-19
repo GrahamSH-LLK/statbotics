@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CSVLink } from "react-csv";
-import { DebounceInput } from "react-debounce-input";
 import { MdAdd, MdClose, MdCloudDownload, MdColorLens, MdRemove, MdSearch } from "react-icons/md";
+import { useDebouncedCallback } from "use-debounce";
 
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -21,6 +21,10 @@ const InsightsTable = ({
   csvFilename,
   toggleDisableHighlight,
   includeKey = true,
+  totalRows,
+  hasMoreRows = false,
+  isLoadingMoreRows = false,
+  onLoadMoreRows,
 }: {
   title: string;
   data: any[];
@@ -31,9 +35,18 @@ const InsightsTable = ({
   csvFilename: string;
   toggleDisableHighlight?: () => void;
   includeKey?: boolean;
+  totalRows?: number;
+  hasMoreRows?: boolean;
+  isLoadingMoreRows?: boolean;
+  onLoadMoreRows?: () => void | Promise<void>;
 }) => {
   const [showSearch, setShowSearch] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [canDownloadCsv, setCanDownloadCsv] = useState(false);
+  const debouncedSetSearch = useDebouncedCallback((value: string) => {
+    setSearch(value);
+  }, 300);
 
   const [expanded, setExpanded] = useState(false);
 
@@ -58,22 +71,54 @@ const InsightsTable = ({
 
   const cellClassName = (cell: any) => classnames("py-2");
 
+  useEffect(() => {
+    setCanDownloadCsv(true);
+  }, []);
+
+  useEffect(() => {
+    if (search && hasMoreRows && !isLoadingMoreRows) {
+      onLoadMoreRows?.();
+    }
+  }, [hasMoreRows, isLoadingMoreRows, onLoadMoreRows, search]);
+
   return (
     <div className="w-full md:w-fit md:max-w-full text-sm mb-4">
       <div className="w-full px-2 py-1 flex items-center justify-center">
         <div className="flex-grow">
           {showSearch ? (
             <div className="flex">
-              <DebounceInput
-                minLength={2}
-                debounceTimeout={300}
+              <input
                 className="w-36 md:w-60 p-2 relative rounded text-sm border-[2px] border-inputBlue focus:outline-none"
                 placeholder="Search"
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchInput}
+                onBlur={() => {
+                  debouncedSetSearch.cancel();
+                  setSearch(searchInput);
+                }}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  const shouldClearSearch = searchInput.length > value.length && value.length < 2;
+
+                  setSearchInput(value);
+
+                  if (value.length >= 2) {
+                    debouncedSetSearch(value);
+                  } else if (shouldClearSearch) {
+                    debouncedSetSearch("");
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    debouncedSetSearch.cancel();
+                    setSearch(searchInput);
+                  }
+                }}
               />
               <MdClose
                 className="hover_icon ml-2"
                 onClick={() => {
+                  debouncedSetSearch.cancel();
+                  setSearchInput("");
                   setSearch("");
                   setShowSearch(!showSearch);
                 }}
@@ -92,9 +137,13 @@ const InsightsTable = ({
           </div>
         )}
         <div className="tooltip" data-tip="Download CSV">
-          <CSVLink data={filteredData} filename={csvFilename}>
+          {canDownloadCsv ? (
+            <CSVLink data={filteredData} filename={csvFilename}>
+              <MdCloudDownload className="hover_icon ml-2" />
+            </CSVLink>
+          ) : (
             <MdCloudDownload className="hover_icon ml-2" />
-          </CSVLink>
+          )}
         </div>
         {expandable && (
           <div className="tooltip" data-tip={expanded ? "Shrink" : "Expand"}>
@@ -121,6 +170,9 @@ const InsightsTable = ({
           headerCellClassName={headerCellClassName}
           rowClassName={rowClassName}
           cellClassName={cellClassName}
+          totalRows={search ? undefined : totalRows}
+          isLoadingMoreRows={isLoadingMoreRows}
+          onLoadMoreRows={hasMoreRows ? onLoadMoreRows : undefined}
         />
       </div>
       {includeKey && <TableKey />}

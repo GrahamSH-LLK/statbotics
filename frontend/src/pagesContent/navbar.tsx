@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu as HamburgerIcon } from "react-icons/gi";
-import WindowedSelect, { createFilter } from "react-windowed-select";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { getAllEvents, getAllTeams } from "../api/header";
 import { Option } from "../components/multiSelect";
+import WindowedSelect, { createFilter } from "../components/windowedSelect";
 import { ShortEvent, ShortTeam } from "../types/data";
 import { classnames } from "../utils";
 
@@ -18,21 +17,10 @@ const loaderProp = ({ src }) => {
   return src;
 };
 
-const Navbar = () => {
+const Navbar = ({ teams = [], events = [] }: { teams?: ShortTeam[]; events?: ShortEvent[] }) => {
   const router = useRouter();
 
   const [toggle, setToggle] = useState(false);
-
-  const [teams, setTeams] = useState<ShortTeam[]>([]);
-  const [events, setEvents] = useState<ShortEvent[]>([]);
-
-  useEffect(() => {
-    getAllTeams().then((data) => setTeams(data));
-  }, []);
-
-  useEffect(() => {
-    getAllEvents().then((data) => setEvents(data));
-  }, []);
 
   const teamOptions = teams
     ?.filter((team) => team.active)

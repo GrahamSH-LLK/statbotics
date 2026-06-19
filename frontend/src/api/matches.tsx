@@ -12,7 +12,7 @@ export async function getNoteworthyMatches(
   let suffix = `/noteworthy_matches/${year}`;
   let storageKey = `noteworthy_matches_${year}_${version}`;
 
-  let suffixes = [];
+  let suffixes: string[] = [];
   if (country) {
     suffixes.push(`country=${country}`);
     storageKey += `_${country}`;
@@ -36,7 +36,9 @@ export async function getNoteworthyMatches(
 
   suffix += suffixes.length > 0 ? `?${suffixes.join("&")}` : "";
 
-  return query(storageKey, suffix, year === CURR_YEAR, 0, year === CURR_YEAR ? 60 : 60 * 60); // 1 minute / 1 hour
+  return query(storageKey, suffix, year === CURR_YEAR, 0, year === CURR_YEAR ? 60 : 60 * 60, {
+    tags: [`matches:${year}`],
+  }); // 1 minute / 1 hour
 }
 
 export async function getUpcomingMatches(
@@ -69,5 +71,7 @@ export async function getUpcomingMatches(
     suffix += `&elim=${elim}`;
     storageKey += `_${elim}`;
   }
-  return query(storageKey, suffix, true, 0, 60); // 1 minute
+  return query(storageKey, suffix, true, 0, 60, {
+    tags: ["matches:upcoming"],
+  }); // 1 minute
 }

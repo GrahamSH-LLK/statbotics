@@ -1,20 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-import { getYearTeamYears } from "../../api/teams";
 import YearLineChart from "../../components/Figures/YearLine";
 import { CURR_YEAR } from "../../constants";
 import { APITeamYear } from "../../types/api";
 import { ShortTeam } from "../../types/data";
 
-const SingleYear = ({ teams }: { teams: ShortTeam[] }) => {
-  const [teamYears, setTeamYears] = useState<APITeamYear[]>([]);
-
-  useEffect(() => {
-    getYearTeamYears(CURR_YEAR).then((data) => setTeamYears(data.team_years));
-  }, []);
-
+const SingleYear = ({ teams, teamYears }: { teams: ShortTeam[]; teamYears: APITeamYear[] }) => {
   const lineData = teams
     .filter((team) => team?.active ?? true)
     .map((team) => ({

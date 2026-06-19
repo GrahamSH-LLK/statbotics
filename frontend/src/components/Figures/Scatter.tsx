@@ -22,7 +22,7 @@ const BestFitLine = ({ nodes, xScale, yScale }) => {
     results = results2;
   }
 
-  const lineGenerator = line()
+  const lineGenerator = line<any>()
     .x((x) => xScale(x.data["x"]))
     .y((x) => yScale(results.predict(x.data["x"])[1]));
 

@@ -79,14 +79,21 @@ const defaultFilters = {
 const UpcomingMatches = ({
   filters,
   setFilters,
+  initialData,
 }: {
   filters: { [key: string]: any };
   setFilters: (filters: { [key: string]: any }) => void;
+  initialData?: MatchData;
 }) => {
-  const [loading, setLoading] = useState(true);
+  const initialFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
+    (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
+    {}
+  );
+
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(false);
-  const [data, setData] = useState<MatchData>(null);
-  const [currFilters, setCurrFilters] = useState({});
+  const [data, setData] = useState<MatchData>(initialData ?? null);
+  const [currFilters, setCurrFilters] = useState(initialData ? initialFilters : {});
 
   const actualFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
     (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),

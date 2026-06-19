@@ -10,7 +10,7 @@ import {
 export const validateFilters = (
   filters: { [key: string]: any },
   validFilters: string[],
-  defaultFilters: string[]
+  defaultFilters: any[]
 ) => {
   const outFilters: { [key: string]: any } = {};
 

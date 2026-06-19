@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
 
 import {
@@ -23,6 +23,9 @@ const Table = ({
   headerCellClassName,
   rowClassName,
   cellClassName,
+  totalRows,
+  isLoadingMoreRows = false,
+  onLoadMoreRows,
 }: {
   data: any[];
   columns: ColumnDef<any, any>[];
@@ -31,8 +34,12 @@ const Table = ({
   headerCellClassName: (header: any) => string;
   rowClassName: (row: any) => string;
   cellClassName: (cell: any) => string;
+  totalRows?: number;
+  isLoadingMoreRows?: boolean;
+  onLoadMoreRows?: () => void | Promise<void>;
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pendingPageIndex, setPendingPageIndex] = useState<number | null>(null);
 
   const table = useReactTable({
     data: data,
@@ -54,6 +61,32 @@ const Table = ({
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize = table.getState().pagination.pageSize;
   const numRows = data.length;
+  const displayedNumRows = Math.max(totalRows ?? numRows, numRows);
+  const hasMoreRows = Boolean(onLoadMoreRows && numRows < displayedNumRows);
+  const canNextPage = table.getCanNextPage() || hasMoreRows;
+
+  useEffect(() => {
+    if (pendingPageIndex === null) {
+      return;
+    }
+
+    if (data.length > pendingPageIndex * pageSize) {
+      table.setPageIndex(pendingPageIndex);
+      setPendingPageIndex(null);
+    }
+  }, [data.length, pageSize, pendingPageIndex, table]);
+
+  const nextPage = async () => {
+    if (table.getCanNextPage()) {
+      table.nextPage();
+      return;
+    }
+
+    if (onLoadMoreRows && hasMoreRows && !isLoadingMoreRows) {
+      setPendingPageIndex(pageIndex + 1);
+      await onLoadMoreRows();
+    }
+  };
 
   const pageOptions: any = [
     { value: 10, label: 10 },
@@ -132,7 +165,7 @@ const Table = ({
           ))}
         </tbody>
       </table>
-      {paginate && numRows > 10 && (
+      {paginate && displayedNumRows > 10 && (
         <div className="w-full h-10 flex items-center justify-center gap-2 mt-4 text-xs">
           <div className="flex gap-2">
             <div className="flex items-center">Rows / Page:</div>
@@ -154,8 +187,8 @@ const Table = ({
           <span className="w-24 flex items-center gap-1">
             <div>{`${pageIndex * pageSize + 1} - ${Math.min(
               (pageIndex + 1) * pageSize,
-              numRows
-            )} of ${numRows}`}</div>
+              displayedNumRows
+            )} of ${displayedNumRows}`}</div>
           </span>
           <div>
             <button
@@ -171,12 +204,12 @@ const Table = ({
             <button
               className={classnames(
                 "border rounded py-1 px-2",
-                !table.getCanNextPage() ? "opacity-50" : ""
+                !canNextPage || isLoadingMoreRows ? "opacity-50" : ""
               )}
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={nextPage}
+              disabled={!canNextPage || isLoadingMoreRows}
             >
-              {">"}
+              {isLoadingMoreRows && !table.getCanNextPage() ? "..." : ">"}
             </button>
           </div>
         </div>

@@ -47,7 +47,7 @@ const SimulationSection = ({ eventId, data }: { eventId: string; data: EventData
   const [simCount, setSimCount] = useState(1000);
   const [refresh, setRefresh] = useState(0);
 
-  const workerRef = useRef<Worker | null>();
+  const workerRef = useRef<Worker | null>(null);
   const [workerMessages, setWorkerMessages] = useState<SimResults[]>([]);
 
   useEffect(() => {

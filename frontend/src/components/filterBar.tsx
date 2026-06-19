@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
-import { DebounceInput } from "react-debounce-input";
+import React, { useState } from "react";
 import { BiShow } from "react-icons/bi";
 import { MdRefresh } from "react-icons/md";
 import Select from "react-select";
+import { useDebouncedCallback } from "use-debounce";
 
 import {
   canadaOptions,
@@ -37,6 +37,7 @@ export const FilterBar = ({
   const filterKeys = Object.keys(filters);
   const stateOptions = filters?.country === "Canada" ? canadaOptions : usaOptions;
   const stateLabel = filters?.country === "Canada" ? "Province" : "State";
+  const [searchInput, setSearchInput] = useState("");
 
   const smartSetFilters = (key: string, value: any) => {
     // Can add more logic here if needed
@@ -70,6 +71,9 @@ export const FilterBar = ({
       return setFilters({ ...filters, country: "", state: "", district: value });
     }
   };
+  const debouncedSetSearch = useDebouncedCallback((value: string) => {
+    smartSetFilters("search", value);
+  }, 300);
 
   return (
     <div className="flex flex-row flex-wrap items-end justify-center">
@@ -123,12 +127,32 @@ export const FilterBar = ({
       {filterKeys.includes("search") && (
         <>
           <div className="w-0.5 h-10 ml-2 mr-2 mb-4 bg-gray-500 rounded" />
-          <DebounceInput
-            minLength={2}
-            debounceTimeout={300}
+          <input
             className="w-40 p-2 mb-4 relative rounded text-sm border-[1px] border-gray-200 focus:outline-inputBlue"
             placeholder="Search"
-            onChange={(e) => smartSetFilters("search", e.target.value)}
+            value={searchInput}
+            onBlur={() => {
+              debouncedSetSearch.cancel();
+              smartSetFilters("search", searchInput);
+            }}
+            onChange={(e) => {
+              const { value } = e.target;
+              const shouldClearSearch = searchInput.length > value.length && value.length < 2;
+
+              setSearchInput(value);
+
+              if (value.length >= 2) {
+                debouncedSetSearch(value);
+              } else if (shouldClearSearch) {
+                debouncedSetSearch("");
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                debouncedSetSearch.cancel();
+                smartSetFilters("search", searchInput);
+              }
+            }}
           />
         </>
       )}

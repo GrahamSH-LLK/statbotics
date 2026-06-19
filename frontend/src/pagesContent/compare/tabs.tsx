@@ -1,22 +1,19 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 
-import { getAllTeams } from "../../api/header";
+import { APITeamYear } from "../../types/api";
 import { ShortTeam } from "../../types/data";
 import PageLayout from "../shared/layout";
 import TabsSection from "../shared/tabs";
 import MultiYear from "./multiYear";
 import SingleYear from "./singleYear";
 
-const Tabs = () => {
-  const [teams, setTeams] = useState<ShortTeam[]>([]);
-
-  useEffect(() => {
-    getAllTeams().then((data) => setTeams(data));
-  }, []);
-
-  const MemoizedSingleYear = useMemo(() => <SingleYear teams={teams} />, [teams]);
+const Tabs = ({ teams, teamYears }: { teams: ShortTeam[]; teamYears: APITeamYear[] }) => {
+  const MemoizedSingleYear = useMemo(
+    () => <SingleYear teams={teams} teamYears={teamYears} />,
+    [teams, teamYears]
+  );
   const MemoizedMultiYear = useMemo(() => <MultiYear teams={teams} />, [teams]);
 
   let tabs = [

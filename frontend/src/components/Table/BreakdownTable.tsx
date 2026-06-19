@@ -162,11 +162,19 @@ const EPABreakdownTable = ({
   yearData,
   data,
   csvFilename,
+  totalRows,
+  hasMoreRows = false,
+  isLoadingMoreRows = false,
+  onLoadMoreRows,
 }: {
   year: number;
   yearData: APIYear;
   data: (APITeamYear | APITeamEvent)[];
   csvFilename: string;
+  totalRows?: number;
+  hasMoreRows?: boolean;
+  isLoadingMoreRows?: boolean;
+  onLoadMoreRows?: () => void | Promise<void>;
 }) => {
   const [disableHighlight, setDisableHighlight] = useState(false);
 
@@ -236,6 +244,10 @@ const EPABreakdownTable = ({
         searchCols={["num", "team"]}
         csvFilename={csvFilename}
         toggleDisableHighlight={() => setDisableHighlight(!disableHighlight)}
+        totalRows={totalRows}
+        hasMoreRows={hasMoreRows}
+        isLoadingMoreRows={isLoadingMoreRows}
+        onLoadMoreRows={onLoadMoreRows}
       />
     </>
   );

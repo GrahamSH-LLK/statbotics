@@ -35,7 +35,7 @@ AUTH_KEY_BLACKLIST: List[str] = []
 # CONFIG
 
 CURR_YEAR = 2026
-DISABLE_GCS = False
+DISABLE_GCS = True
 
 # MISC
 

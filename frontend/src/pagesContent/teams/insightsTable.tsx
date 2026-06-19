@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { createColumnHelper } from "@tanstack/react-table";
 
@@ -39,11 +39,19 @@ const PageTeamInsightsTable = ({
   data,
   filters,
   setFilters,
+  totalRows,
+  hasMoreRows,
+  isLoadingMoreRows,
+  onLoadMoreRows,
 }: {
   year: number;
   data: TeamYearsData;
   filters: { [key: string]: any };
   setFilters: (filters: { [key: string]: any }) => void;
+  totalRows?: number;
+  hasMoreRows: boolean;
+  isLoadingMoreRows: boolean;
+  onLoadMoreRows: () => void | Promise<void>;
 }) => {
   const [disableHighlight, setDisableHighlight] = useState(false);
   const [showProjections, setShowProjections] = useState(true);
@@ -62,6 +70,16 @@ const PageTeamInsightsTable = ({
     (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
     {}
   );
+
+  const hasActiveFilters = Object.keys(defaultFilters).some(
+    (key) => actualFilters[key] !== defaultFilters[key]
+  );
+
+  useEffect(() => {
+    if ((hasActiveFilters || !showProjections) && hasMoreRows && !isLoadingMoreRows) {
+      onLoadMoreRows();
+    }
+  }, [hasActiveFilters, hasMoreRows, isLoadingMoreRows, onLoadMoreRows, showProjections]);
 
   const allTeamYears: APITeamYear[] = data.team_years
     .sort((a, b) => b?.epa?.breakdown?.total_points - a?.epa?.breakdown?.total_points)
@@ -195,6 +213,10 @@ const PageTeamInsightsTable = ({
         searchCols={["num", "team"]}
         csvFilename={`${year}_insights.csv`}
         toggleDisableHighlight={() => setDisableHighlight(!disableHighlight)}
+        totalRows={totalRows}
+        hasMoreRows={hasMoreRows}
+        isLoadingMoreRows={isLoadingMoreRows}
+        onLoadMoreRows={onLoadMoreRows}
       />
     </div>
   );

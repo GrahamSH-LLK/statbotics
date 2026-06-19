@@ -12,20 +12,25 @@ const Tabs = ({
   error,
   filters,
   setFilters,
+  initialUpcoming,
+  initialNoteworthy,
 }: {
   year: number;
   error: boolean;
   filters: { [key: string]: any };
   setFilters: (filters: { [key: string]: any }) => void;
+  initialUpcoming?: any;
+  initialNoteworthy?: any;
 }) => {
   const MemoizedUpcoming = useMemo(
     () => (
       <UpcomingMatches
         filters={filters}
         setFilters={(newFilters) => setFilters({ ...filters, ...newFilters })}
+        initialData={initialUpcoming}
       />
     ),
-    [filters, setFilters]
+    [filters, setFilters, initialUpcoming]
   );
   const MemoizedNoteworthy = useMemo(
     () => (
@@ -33,9 +38,10 @@ const Tabs = ({
         year={year}
         filters={filters}
         setFilters={(newFilters) => setFilters({ ...filters, ...newFilters })}
+        initialData={initialNoteworthy}
       />
     ),
-    [year, filters, setFilters]
+    [year, filters, setFilters, initialNoteworthy]
   );
 
   const tabs = [

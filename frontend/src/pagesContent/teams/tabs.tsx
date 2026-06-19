@@ -16,12 +16,22 @@ const Tabs = ({
   error,
   filters,
   setFilters,
+  totalRows,
+  hasMoreRows,
+  isLoadingMoreRows,
+  loadMoreRowsError,
+  onLoadMoreRows,
 }: {
   year: number;
   data: TeamYearsData | undefined;
   error: boolean;
   filters: { [key: string]: any };
   setFilters: (filters: { [key: string]: any }) => void;
+  totalRows?: number;
+  hasMoreRows: boolean;
+  isLoadingMoreRows: boolean;
+  loadMoreRowsError: boolean;
+  onLoadMoreRows: () => void | Promise<void>;
 }) => {
   const MemoizedInsightsTable = useMemo(
     () => (
@@ -30,9 +40,13 @@ const Tabs = ({
         data={data || emptyTeamYearsData}
         filters={filters}
         setFilters={(newFilters) => setFilters({ ...filters, ...newFilters })}
+        totalRows={totalRows}
+        hasMoreRows={hasMoreRows}
+        isLoadingMoreRows={isLoadingMoreRows}
+        onLoadMoreRows={onLoadMoreRows}
       />
     ),
-    [year, data, filters, setFilters]
+    [year, data, filters, setFilters, totalRows, hasMoreRows, isLoadingMoreRows, onLoadMoreRows]
   );
 
   const MemoizedBreakdownTable = useMemo(
@@ -43,9 +57,13 @@ const Tabs = ({
           data={data || emptyTeamYearsData}
           filters={filters}
           setFilters={(newFilters) => setFilters({ ...filters, ...newFilters })}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
+          isLoadingMoreRows={isLoadingMoreRows}
+          onLoadMoreRows={onLoadMoreRows}
         />
       ),
-    [year, data, filters, setFilters]
+    [year, data, filters, setFilters, totalRows, hasMoreRows, isLoadingMoreRows, onLoadMoreRows]
   );
 
   const MemoizedBubbleChart = useMemo(
@@ -87,7 +105,18 @@ const Tabs = ({
     { title: "Figures", content: MemoizedFigureSection },
   ].filter(Boolean);
 
-  return <TabsSection loading={data === undefined} error={error} tabs={tabs} />;
+  return (
+    <>
+      {hasMoreRows && (isLoadingMoreRows || loadMoreRowsError) && (
+        <div className="w-full flex items-center justify-center pb-4 text-sm text-gray-600">
+          {isLoadingMoreRows
+            ? "Loading all teams..."
+            : "Unable to load all teams. Please try again."}
+        </div>
+      )}
+      <TabsSection loading={data === undefined} error={error} tabs={tabs} />
+    </>
+  );
 };
 
 export default Tabs;

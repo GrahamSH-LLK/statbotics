@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { createFilter } from "react-select";
-import WindowedSelect from "react-windowed-select";
 
 import { getTeam } from "../../api/team";
 import LineChart from "../../components/Figures/Line";
 import { multiSelectStyles } from "../../components/multiSelect";
+import WindowedSelect from "../../components/windowedSelect";
 import { CURR_YEAR } from "../../constants";
 import { ShortTeam } from "../../types/data";
 import { round } from "../../utils";

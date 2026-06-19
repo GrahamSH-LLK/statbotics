@@ -4,12 +4,12 @@ import React, { useEffect, useState } from "react";
 import { AiOutlineNumber, AiOutlinePercentage } from "react-icons/ai";
 import { GiPodium } from "react-icons/gi";
 import Select, { createFilter } from "react-select";
-import WindowedSelect from "react-windowed-select";
 
 import { getTeamYearTeamMatches } from "../../api/teams";
 import { APITeamMatch, APITeamYear } from "../../types/api";
 import { classnames } from "../../utils";
 import { multiSelectStyles } from "../multiSelect";
+import WindowedSelect from "../windowedSelect";
 import LineChart from "./Line";
 import { getYAxisOptions } from "./shared";
 

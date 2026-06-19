@@ -102,17 +102,24 @@ const NoteworthyMatches = ({
   year,
   filters,
   setFilters,
+  initialData,
 }: {
   year: number;
   filters: { [key: string]: any };
   setFilters: (filters: { [key: string]: any }) => void;
+  initialData?: MatchData;
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [data, setData] = useState<MatchData>(null);
+  const initialFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
+    (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
+    {}
+  );
 
-  const [currYear, setCurrYear] = useState(-1);
-  const [currFilters, setCurrFilters] = useState({});
+  const [loading, setLoading] = useState(!initialData);
+  const [error, setError] = useState(false);
+  const [data, setData] = useState<MatchData>(initialData ?? null);
+
+  const [currYear, setCurrYear] = useState(initialData ? year : -1);
+  const [currFilters, setCurrFilters] = useState(initialData ? initialFilters : {});
 
   const actualFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
     (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),

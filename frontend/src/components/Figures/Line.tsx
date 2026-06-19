@@ -85,10 +85,10 @@ const LineChart = ({
         useMesh={true}
         tooltip={({ point }) => {
           const y: any = point.data.yFormatted;
-          const xLabel = xLabels[point.serieId][point.data.x];
+          const xLabel = xLabels[point.seriesId][point.data.x];
           return (
             <div className="bg-white rounded shadow p-2" style={{ color: point.color }}>
-              <div className="text-sm font-bold">{`Team ${point.serieId}`}</div>
+              <div className="text-sm font-bold">{`Team ${point.seriesId}`}</div>
               <div className="text-xs mb-1">{xLabel}</div>
               <div className="text-sm">{`${yAxis}: ${round(parseFloat(y))}`}</div>
             </div>
