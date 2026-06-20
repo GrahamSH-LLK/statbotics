@@ -79,13 +79,13 @@ const Navbar = ({ teams = [], events = [] }: { teams?: ShortTeam[]; events?: Sho
           Statbotics
         </Link>
         <div className="hidden md:flex items-center text-base text-gray-300 hover:text-gray-100 font-thin mr-4">
-          <Link href="/teams">Teams</Link>
+          <Link href="/teams" prefetch={true}>Teams</Link>
         </div>
         <div className="hidden md:flex items-center text-base text-gray-300 hover:text-gray-100 font-thin mr-4">
-          <Link href="/events">Events</Link>
+          <Link href="/events" prefetch={true}>Events</Link>
         </div>
         <div className="hidden md:flex items-center text-base text-gray-300 hover:text-gray-100 font-thin">
-          <Link href="/matches">Matches</Link>
+          <Link href="/matches" prefetch={true}>Matches</Link>
         </div>
         <div className="hidden md:inline dropdown dropdown-end dropdown-hover" tabIndex={0}>
           <div className="h-10 flex items-center ml-4 cursor-pointer">
