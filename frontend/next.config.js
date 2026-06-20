@@ -2,11 +2,12 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
-    domains: [
+    qualities: [100, 75],
+    remotePatterns: [
       // imgur
-      "i.imgur.com",
+      new URL("https://i.imgur.com"),
       // instagram, through TBA
-      "www.thebluealliance.com",
+      new URL("https://www.thebluealliance.com"),
     ],
   },
   env: {

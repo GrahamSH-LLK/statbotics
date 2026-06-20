@@ -9,7 +9,7 @@ import { ShortTeam } from "../../types/data";
 
 const SingleYear = ({ teams, teamYears }: { teams: ShortTeam[]; teamYears: APITeamYear[] }) => {
   const lineData = teams
-    .filter((team) => team?.active ?? true)
+    ?.filter((team) => team?.active ?? true)
     .map((team) => ({
       value: team.team,
       label: `${team.team} | ${team.name}`,
