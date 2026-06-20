@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
-
 .text_link {
   @apply text-blue-500 hover:text-blue-600 cursor-pointer underline;
 }

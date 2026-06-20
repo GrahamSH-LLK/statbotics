@@ -1,5 +1,11 @@
-@import "./base.css";
+@import url("https://fonts.googleapis.com/css?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+@plugin "daisyui" {
+  themes: false;
+}
+@config "../../tailwind.config.js";
+
+@import "./base.css";
