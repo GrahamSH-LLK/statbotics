@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Select from "react-select";
 
 import {
@@ -56,6 +56,7 @@ const Table = ({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    autoResetPageIndex: false,
   });
 
   const pageIndex = table.getState().pagination.pageIndex;
@@ -64,6 +65,17 @@ const Table = ({
   const displayedNumRows = Math.max(totalRows ?? numRows, numRows);
   const hasMoreRows = Boolean(onLoadMoreRows && numRows < displayedNumRows);
   const canNextPage = table.getCanNextPage() || hasMoreRows;
+  const loadedPageCount = Math.ceil(numRows / pageSize);
+  const isOnLastLoadedPage =
+    paginate && loadedPageCount > 0 && pageIndex >= loadedPageCount - 1;
+
+  const requestMoreRows = useCallback(async () => {
+    if (!onLoadMoreRows || !hasMoreRows || isLoadingMoreRows) {
+      return;
+    }
+
+    await onLoadMoreRows();
+  }, [hasMoreRows, isLoadingMoreRows, onLoadMoreRows]);
 
   useEffect(() => {
     if (pendingPageIndex === null) {
@@ -76,15 +88,38 @@ const Table = ({
     }
   }, [data.length, pageSize, pendingPageIndex, table]);
 
+  useEffect(() => {
+    if (!paginate || numRows === 0) {
+      return;
+    }
+
+    const maxPageIndex = Math.max(Math.ceil(numRows / pageSize) - 1, 0);
+    if (pageIndex > maxPageIndex) {
+      table.setPageIndex(maxPageIndex);
+    }
+  }, [numRows, pageIndex, pageSize, paginate, table]);
+
+  useEffect(() => {
+    if (sorting.length > 0) {
+      void requestMoreRows();
+    }
+  }, [requestMoreRows, sorting.length]);
+
+  useEffect(() => {
+    if (isOnLastLoadedPage) {
+      void requestMoreRows();
+    }
+  }, [isOnLastLoadedPage, requestMoreRows]);
+
   const nextPage = async () => {
     if (table.getCanNextPage()) {
       table.nextPage();
       return;
     }
 
-    if (onLoadMoreRows && hasMoreRows && !isLoadingMoreRows) {
+    if (hasMoreRows && !isLoadingMoreRows) {
       setPendingPageIndex(pageIndex + 1);
-      await onLoadMoreRows();
+      await requestMoreRows();
     }
   };
 

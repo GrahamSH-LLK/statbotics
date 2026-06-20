@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
+import { getYearTeamYears } from "../../api/teams";
 import { validateFilters } from "../../components/filter";
 import { CURR_YEAR } from "../../constants";
 import PageLayout from "../../pagesContent/shared/layout";
@@ -72,15 +73,12 @@ export default function TeamsClient({
     setLoadAllTeamsError(false);
 
     try {
-      const response = await fetch(`/api/team-years/${year}`);
-
-      if (!response.ok) {
-        throw new Error("Unable to load all teams");
+      const response = await getYearTeamYears(year);
+      if (!response || !response.team_years || response.team_years.length === 0) {
+        throw new Error("Failed to load all teams");
       }
-
-      const nextData = await response.json();
-      setTeamData(nextData);
-      setTotalTeamCount(getTeamCount(nextData, nextData?.team_years?.length ?? totalTeamCount));
+      setTeamData(response);
+      setTotalTeamCount(getTeamCount(response, response?.team_years?.length ?? totalTeamCount));
       setHasLoadedAllTeams(true);
     } catch {
       setLoadAllTeamsError(true);

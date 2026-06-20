@@ -56,6 +56,7 @@ async function query(
 
     data = decompress(await res.arrayBuffer());
   } catch (e) {
+    console.log(e.message);
     const res = await fetch(`${BACKEND_URL}${apiPath}`, cacheOptions(expiry, options));
     log(`${apiPath} (backend) took ${round(performance.now() - start, 0)}ms`);
     if (res.ok) {

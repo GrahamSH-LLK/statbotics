@@ -7,7 +7,7 @@ export const BACKEND_URL = PROD
 
 export const BUCKET_URL = PROD
   ? "https://storage.googleapis.com/site_gh_v1"
-  : "https://storage.googleapis.com/site_dev_v1";
+  : "https://storage.googleapis.com/site_gh_v1";
 
 export const TBA_API_KEY = "XeUIxlvO4CPc44NlLE3ncevDg7bAhp6CRy6zC9M2aQb2zGfys0M30eKwavFJSEJr";
 
