@@ -71,6 +71,7 @@ const TabsSection = ({
           </div>
         ) : loading ? (
           <div className="w-full flex-grow flex flex-col items-center justify-center">
+            <span className="loading loading-spinner"></span>
             <div className="text-gray-700 mt-4">Loading data, please wait...</div>
           </div>
         ) : (

@@ -254,6 +254,7 @@ const NoteworthyMatches = ({
           </>
         ) : (
           <div className="w-full flex-grow flex flex-col items-center justify-center">
+            {loading && <span className="loading loading-spinner"></span>}
             <div className="text-gray-700 mt-4">
               {loading ? "Loading data, please wait..." : "No upcoming matches"}
             </div>
