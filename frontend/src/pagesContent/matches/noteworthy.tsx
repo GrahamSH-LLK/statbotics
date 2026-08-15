@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
+import useSWR from "swr";
 
 import { getNoteworthyMatches } from "../../api/matches";
 import MatchTable from "../../components/MatchTable";
@@ -15,6 +16,35 @@ type MatchData = {
   high_auto_score?: APIMatch[];
   high_teleop_score?: APIMatch[];
   high_endgame_score?: APIMatch[];
+};
+
+type NoteworthyMatchesKey = [
+  "noteworthy-matches",
+  number,
+  string,
+  string,
+  string,
+  string,
+  string,
+];
+
+const fetchNoteworthyMatches = async ([
+  ,
+  year,
+  country,
+  state,
+  district,
+  playoff,
+  week,
+]: NoteworthyMatchesKey) => {
+  const weekNum = week ? Number(week) : null;
+  const data = await getNoteworthyMatches(year, country, state, district, playoff, weekNum);
+
+  if (data === undefined || data === null) {
+    throw new Error("Failed to load noteworthy matches");
+  }
+
+  return data as MatchData;
 };
 
 const NoteworthySection = ({
@@ -109,47 +139,36 @@ const NoteworthyMatches = ({
   setFilters: (filters: { [key: string]: any }) => void;
   initialData?: MatchData;
 }) => {
-  const initialFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
-    (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
-    {}
+  const actualFilters: { [key: string]: any } = useMemo(
+    () =>
+      Object.keys(defaultFilters).reduce(
+        (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
+        {}
+      ),
+    [filters]
   );
 
-  const [loading, setLoading] = useState(!initialData);
-  const [error, setError] = useState(false);
-  const [data, setData] = useState<MatchData>(initialData ?? null);
+  const swrKey: NoteworthyMatchesKey = [
+    "noteworthy-matches",
+    year,
+    actualFilters.country,
+    actualFilters.state,
+    actualFilters.district,
+    actualFilters.playoff,
+    actualFilters.week,
+  ];
 
-  const [currYear, setCurrYear] = useState(initialData ? year : -1);
-  const [currFilters, setCurrFilters] = useState(initialData ? initialFilters : {});
-
-  const actualFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
-    (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
-    {}
-  );
-
-  useEffect(() => {
-    if (year === currYear && JSON.stringify(currFilters) === JSON.stringify(actualFilters)) {
-      return;
+  const { data, error, isLoading, isValidating } = useSWR<MatchData>(
+    swrKey,
+    fetchNoteworthyMatches,
+    {
+      fallbackData: initialData,
+      keepPreviousData: true,
+      revalidateOnMount: !initialData,
     }
+  );
 
-    setLoading(true);
-    getNoteworthyMatches(
-      year,
-      actualFilters.country,
-      actualFilters.state,
-      actualFilters.district,
-      actualFilters.playoff,
-      actualFilters.week
-    ).then((data) => {
-      if (data) {
-        setData(data);
-        setCurrYear(year);
-        setCurrFilters(actualFilters);
-      } else {
-        setError(true);
-      }
-      setLoading(false);
-    });
-  }, [year, actualFilters, currYear, currFilters]);
+  const loading = isLoading || (isValidating && !data);
 
   if (error) {
     return (

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getMatch } from "../../../api/match";
+import { getCachedMatch } from "../../../api/server-cache";
 import ImageRow from "../../../pagesContent/match/[match_id]/imageRow";
 import Summary from "../../../pagesContent/match/[match_id]/summary";
 import MatchTable from "../../../pagesContent/match/[match_id]/table";
@@ -17,7 +17,7 @@ type MatchParams = Promise<{ match_id: string }>;
 
 export async function generateMetadata({ params }: { params: MatchParams }): Promise<Metadata> {
   const { match_id } = await params;
-  const data = await getMatch(match_id);
+  const data = await getCachedMatch(match_id);
 
   return {
     title: data?.match?.match_name
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: MatchParams }): Pro
 
 export default async function MatchPage({ params }: { params: MatchParams }) {
   const { match_id } = await params;
-  const data = await getMatch(match_id);
+  const data = await getCachedMatch(match_id);
 
   if (!data?.match || !data?.event) {
     notFound();

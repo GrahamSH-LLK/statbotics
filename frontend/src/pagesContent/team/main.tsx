@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -12,6 +13,10 @@ import PageLayout from "../shared/layout";
 import NotFound from "../shared/notFound";
 import SummaryTabs from "./summaryTabs";
 import Tabs from "./tabs";
+
+type TeamYearKey = ["team-year", number, number];
+
+const fetchTeamYear = ([, team, year]: TeamYearKey) => getTeamYear(team, year);
 
 const PageContent = ({
   team,
@@ -33,43 +38,33 @@ const PageContent = ({
     [year]
   );
 
-  const [teamYearDataDict, setTeamYearDataDict] = useState<{
-    [key: number]: TeamYearData | undefined;
-  }>(() => (initialTeamYearData ? { [paramYear]: initialTeamYearData } : {}));
-
-  useEffect(() => {
-    setTeamYearDataDict(initialTeamYearData ? { [paramYear]: initialTeamYearData } : {});
-  }, [team, paramYear, initialTeamYearData]);
-
-  useEffect(() => {
-    const _getTeamYearDataForYear = async (team: number, year: number) => {
-      if (teamYearDataDict[year]) {
-        return;
-      }
-
-      const data = await getTeamYear(team, year);
-      if (!data) return;
-
-      if (!("team_year" in data)) {
-        // No data for this year (e.g. before rookie year); redirect to most recent valid year
-        const redirect = data as TeamYearRedirect;
-        const lastActiveYear = redirect.team_active_years?.last_active_year;
-        if (lastActiveYear && year !== lastActiveYear) {
-          setYear(lastActiveYear);
-        }
-        return;
-      }
-
-      setTeamYearDataDict((prev) => ({ ...prev, [year]: data as TeamYearData }));
-    };
-
-    if (!isNaN(team) && year >= 2002 && year <= CURR_YEAR) {
-      _getTeamYearDataForYear(team, year);
+  const shouldLoadTeamYear = !isNaN(team) && year >= 2002 && year <= CURR_YEAR;
+  const { data } = useSWR<TeamYearData | TeamYearRedirect | undefined>(
+    shouldLoadTeamYear ? ["team-year", team, year] : null,
+    fetchTeamYear,
+    {
+      fallbackData: year === paramYear ? initialTeamYearData : undefined,
+      keepPreviousData: true,
+      revalidateOnMount: !initialTeamYearData,
     }
-  }, [team, year, teamYearDataDict, setYear]);
+  );
 
-  const teamYearData = teamYearDataDict?.[year];
-  const fallbackTeamYearData = teamYearDataDict?.[prevYear];
+  useEffect(() => {
+    if (!data || "team_year" in data) {
+      return;
+    }
+
+    const lastActiveYear = data.team_active_years?.last_active_year;
+    if (lastActiveYear && year !== lastActiveYear) {
+      setYear(lastActiveYear);
+    }
+  }, [data, setYear, year]);
+
+  const loadedTeamYearData = data && "team_year" in data ? data : undefined;
+  const teamYearData =
+    loadedTeamYearData?.team_year?.year === year ? loadedTeamYearData : undefined;
+  const fallbackTeamYearData =
+    loadedTeamYearData ?? (prevYear === paramYear ? initialTeamYearData : undefined);
 
   if (!teamYearData && !fallbackTeamYearData) {
     return <NotFound type="Team" />;
@@ -85,9 +80,7 @@ const PageContent = ({
     (_, i) => rookieYear + i
   ).reverse();
 
-  // remembers name when selecting a year without data
-  const teamName = Object.values(teamYearDataDict).find((data) => data?.team_year?.team === team)
-    ?.team_year?.name;
+  const teamName = effectiveData?.team_year?.name;
 
   return (
     <PageLayout

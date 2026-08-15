@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getTeamYear } from "../../../api/team";
+import { getCachedTeamYear } from "../../../api/server-cache";
 import { CURR_YEAR } from "../../../constants";
 import PageContent from "../../../pagesContent/team/main";
 
@@ -24,7 +24,7 @@ export default async function TeamPage({ params }: { params: TeamParams }) {
     notFound();
   }
 
-  const data = await getTeamYear(teamNum, CURR_YEAR);
+  const data = await getCachedTeamYear(teamNum, CURR_YEAR);
 
   if (!data || !("team_year" in data)) {
     notFound();

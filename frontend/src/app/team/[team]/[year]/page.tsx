@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { getTeamYear } from "../../../../api/team";
+import { getCachedTeamYear } from "../../../../api/server-cache";
 import { CURR_YEAR } from "../../../../constants";
 import PageContent from "../../../../pagesContent/team/main";
 import { clampedTeamYear } from "../../../route-utils";
@@ -30,7 +30,7 @@ export default async function TeamYearPage({ params }: { params: TeamYearParams 
     redirect(`/team/${teamNum}/${urlYear}`);
   }
 
-  const data = await getTeamYear(teamNum, urlYear);
+  const data = await getCachedTeamYear(teamNum, urlYear);
 
   if (!data) {
     notFound();

@@ -1,9 +1,11 @@
+import { Suspense } from "react";
+
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 
-import { getAllEvents, getAllTeams } from "../api/header";
+import { getCachedAllEvents, getCachedAllTeams } from "../api/server-cache";
 import SiteLayout from "../layouts/siteLayout";
 import Navbar from "../pagesContent/navbar";
 import "../styles/globals.css";
@@ -29,9 +31,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [teams, events] = await Promise.all([getAllTeams(), getAllEvents()]);
+async function NavbarData() {
+  const [teams, events] = await Promise.all([getCachedAllTeams(), getCachedAllEvents()]);
 
+  return <Navbar teams={teams} events={events} />;
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
@@ -53,7 +59,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
         <div className="min-h-screen flex flex-col bg-white text-gray-800">
-          <Navbar teams={teams} events={events} />
+          <Suspense fallback={<Navbar />}>
+            <NavbarData />
+          </Suspense>
           <SiteLayout>{children}</SiteLayout>
           <footer className="w-full border-t border-gray-300 text-gray-600 text-center pt-3 pb-2">
             <div className="h-4 sm:h-5 lg:h-6 flex justify-center items-center gap-1 text-xs sm:text-sm lg:text-base">

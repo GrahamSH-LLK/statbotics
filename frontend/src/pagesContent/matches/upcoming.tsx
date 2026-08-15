@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { BsTwitch } from "react-icons/bs";
+import useSWR from "swr";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -16,6 +17,42 @@ type MatchData = {
   match: APIMatch;
   event_name: string;
 }[];
+
+type UpcomingMatchesKey = [
+  "upcoming-matches",
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  number,
+];
+
+const fetchUpcomingMatches = async ([
+  ,
+  country,
+  state,
+  district,
+  playoff,
+  filterMatches,
+  sortMatches,
+]: UpcomingMatchesKey) => {
+  const data = await getUpcomingMatches(
+    country,
+    state,
+    district,
+    playoff,
+    filterMatches,
+    sortMatches
+  );
+
+  if (data === undefined || data === null) {
+    throw new Error("Failed to load upcoming matches");
+  }
+
+  return data as MatchData;
+};
 
 const UpcomingMatch = ({ match }: { match: { match: APIMatch; event_name: string } }) => {
   const eventId = match.match.event;
@@ -85,44 +122,37 @@ const UpcomingMatches = ({
   setFilters: (filters: { [key: string]: any }) => void;
   initialData?: MatchData;
 }) => {
-  const initialFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
-    (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
-    {}
+  const actualFilters: { [key: string]: any } = useMemo(
+    () =>
+      Object.keys(defaultFilters).reduce(
+        (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
+        {}
+      ),
+    [filters]
   );
 
-  const [loading, setLoading] = useState(!initialData);
-  const [error, setError] = useState(false);
-  const [data, setData] = useState<MatchData>(initialData ?? null);
-  const [currFilters, setCurrFilters] = useState(initialData ? initialFilters : {});
+  const swrKey: UpcomingMatchesKey = [
+    "upcoming-matches",
+    actualFilters.country,
+    actualFilters.state,
+    actualFilters.district,
+    actualFilters.playoff,
+    actualFilters.filterMatches,
+    actualFilters.sortMatches,
+    actualFilters.refresh,
+  ];
 
-  const actualFilters: { [key: string]: any } = Object.keys(defaultFilters).reduce(
-    (acc, key) => ({ ...acc, [key]: filters[key] || defaultFilters[key] }),
-    {}
-  );
-
-  useEffect(() => {
-    if (JSON.stringify(currFilters) === JSON.stringify(actualFilters)) {
-      return;
+  const { data, error, isLoading, isValidating } = useSWR<MatchData>(
+    swrKey,
+    fetchUpcomingMatches,
+    {
+      fallbackData: initialData,
+      keepPreviousData: true,
+      revalidateOnMount: !initialData,
     }
+  );
 
-    setLoading(true);
-    getUpcomingMatches(
-      actualFilters.country,
-      actualFilters.state,
-      actualFilters.district,
-      actualFilters.playoff,
-      actualFilters.filterMatches,
-      actualFilters.sortMatches
-    ).then((data) => {
-      if (data) {
-        setData(data);
-        setCurrFilters(actualFilters);
-      } else {
-        setError(true);
-      }
-      setLoading(false);
-    });
-  }, [actualFilters, currFilters]);
+  const loading = isLoading || (isValidating && !data);
 
   if (error) {
     return (

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getEvent } from "../../../api/event";
+import { getCachedEvent } from "../../../api/server-cache";
 import Tabs from "../../../pagesContent/event/[event_id]/tabs";
 import { formatEventName } from "../../../utils";
 
@@ -15,7 +15,7 @@ type EventParams = Promise<{ event_id: string }>;
 
 export async function generateMetadata({ params }: { params: EventParams }): Promise<Metadata> {
   const { event_id } = await params;
-  const data = await getEvent(event_id);
+  const data = await getCachedEvent(event_id);
 
   return {
     title: data?.event?.name ? `${data.event.name} - Statbotics` : `${event_id} - Statbotics`,
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: EventParams }): Pro
 
 export default async function EventPage({ params }: { params: EventParams }) {
   const { event_id } = await params;
-  const data = await getEvent(event_id);
+  const data = await getCachedEvent(event_id);
 
   if (!data?.event) {
     notFound();
