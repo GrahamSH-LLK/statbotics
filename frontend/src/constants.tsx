@@ -2,7 +2,7 @@ export const PROD = process.env.PROD === "True";
 
 // undici bug requires 127.0.0.1 instead of localhost
 export const BACKEND_URL = PROD
-  ? "https://statboticsapi.frc.autos/v3/site"
+  ? "https://api.frc.autos/v3/site"
   : "http://127.0.0.1:8000/v3/site";
 
 export const BUCKET_URL = PROD
